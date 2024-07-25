@@ -70,3 +70,5 @@ docker exec -ti local-spark bash
 ```
 pytest --log-cli-level info -p no:warnings -v ./adventureworks/tests
 ```
+https://delta.io/blog/delta-lake-s3/
+https://docs.delta.io/latest/delta-batch.html#create-a-table&language-python
