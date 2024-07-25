@@ -23,7 +23,7 @@ class DeltaDataSet:
     data_type: str
     database: str
     partition: str
-    skip_publish: bool = False
+    skip_write: bool = False
     replace_partition: bool = False
 
 
@@ -65,7 +65,7 @@ class StandardETL(ABC):
 
         # Use the dictionary keys for potential logging or debugging
         for dataset_name, dataset in input_datasets.items():
-            if dataset.skip_publish:
+            if dataset.skip_write:
                 continue  # Skip datasets that are not meant to be published
 
             data_to_write = dataset.curr_data.withColumn(
@@ -119,7 +119,7 @@ class StandardETL(ABC):
         partition = kwargs.get("partition")
         bronze_data_sets = self.get_bronze_datasets(spark, partition=partition)
         self.write_delta_data(bronze_data_sets, spark)
-        print(
+        logging.info(
             "Created, validated & published bronze datasets:"
             f" {[ds for ds in bronze_data_sets.keys()]}"
         )
@@ -300,7 +300,7 @@ class SalesMartETL(StandardETL):
         silver_datasets["dim_customer"].curr_data = spark.read.table(
             f"{self.DATABASE}.dim_customer"
         )
-        silver_datasets["dim_customer"].skip_publish = True
+        silver_datasets["dim_customer"].skip_write = True
         input_datasets["dim_customer"] = silver_datasets["dim_customer"]
 
         silver_datasets["fct_orders"] = DeltaDataSet(
