@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  local-spark:
+    image: local-spark  
+    container_name: local-spark
+    build:
+      context: ./
+      dockerfile: ./containers/spark/Dockerfile
+    environment:
+      METADATA_DRIVERNAME: postgresql
+      METADATA_HOST: postgres
+      METADATA_PORT: '5432'
+      METADATA_USERNAME: shrestic
+      METADATA_PASSWORD: shrestic
+      METADATA_DATABASE: shrestic
+    volumes:
+      - ./adventureworks:/opt/spark/work-dir/adventureworks 
+    depends_on:  
+      - postgres
+    ports:  
+      - "4040:4040"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: shrestic
+      POSTGRES_PASSWORD: shrestic
+      POSTGRES_DB: shrestic
+    restart: always
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: 'minio/minio:latest'
+    hostname: minio
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server --console-address ":9001" /data
+
+  createbuckets:
+    image: 'minio/mc:latest'
+    container_name: createbuckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 minio minio123; /usr/bin/mc rm -r --force myminio/adventureworks; /usr/bin/mc mb myminio/adventureworks; /usr/bin/mc policy download myminio/adventureworks; exit 0; "
+
