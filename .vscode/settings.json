@@ -1,6 +1,12 @@
 {
     "cSpell.words": [
         "adventureworks",
-        "businessintelligence"
+        "businessintelligence",
+        "cust",
+        "Metadatadb",
+        "mydatabase",
+        "mypassword",
+        "myuser",
+        "psycopg"
     ]
 }

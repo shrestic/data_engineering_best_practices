@@ -9,28 +9,31 @@ services:
       dockerfile: ./containers/spark/Dockerfile
     environment:
       METADATA_DRIVERNAME: postgresql
-      METADATA_HOST: postgres
+      METADATA_HOST: metadata
       METADATA_PORT: '5432'
-      METADATA_USERNAME: shrestic
-      METADATA_PASSWORD: shrestic
-      METADATA_DATABASE: shrestic
+      METADATA_USERNAME: sdeuser
+      METADATA_PASSWORD: sdepassword
+      METADATA_DATABASE: metadatadb
     volumes:
       - ./adventureworks:/opt/spark/work-dir/adventureworks 
     depends_on:  
-      - postgres
+      - metadata
     ports:  
-      - "4040:4040"
+      - "7077:7077" # Spark master submit port, if running
+      - "4040:4040" # Spark application
+      - "18080:18080" # History server
 
-  postgres:
+  metadata:
     image: postgres:16
-    container_name: postgres
+    container_name: metadata
     environment:
-      POSTGRES_USER: shrestic
-      POSTGRES_PASSWORD: shrestic
-      POSTGRES_DB: shrestic
-    restart: always
+      POSTGRES_USER: sdeuser
+      POSTGRES_PASSWORD: sdepassword
+      POSTGRES_DB: metadatadb
     ports:
       - "5432:5432"
+    volumes:
+      - ./containers/metadata/1-metadata-table.sql:/docker-entrypoint-initdb.d/init.sql
 
   minio:
     image: 'minio/minio:latest'

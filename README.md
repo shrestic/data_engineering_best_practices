@@ -62,6 +62,11 @@ spark.sql("select count(*) from adventureworks.dim_customer").show() // 1000 * n
 spark.sql("select count(*) from adventureworks.fct_orders").show() // 10000 * num of etl runs
 ```
 
+* Run start-history-server to access the address history spark server
+```
+docker exec -ti local-spark bash -c '$SPARK_HOME/sbin/start-history-server.sh'
+```
+
 * Run test
 ```
 docker exec -ti local-spark bash

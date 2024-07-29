@@ -1,17 +1,13 @@
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+import sys
 from typing import Dict, List, Optional
-from delta.tables import DeltaTable
+from delta.tables import DeltaTable # type: ignore
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
-try:
-    from adventureworks.pipelines.utils.create_fake_data import generate_bronze_data
-except ModuleNotFoundError:
-    from utils.create_fake_data import generate_bronze_data  # type: ignore
-
-logging.basicConfig(level = logging.INFO)
+from utils.metadata import log_metadata
+from utils.create_fake_data import generate_bronze_data
 
 @dataclass
 class DeltaDataSet:
@@ -63,7 +59,7 @@ class StandardETL(ABC):
     ) -> None:
         """Writes data from DeltaDataSets to their respective storage paths, handling partitioning and upserts."""
 
-        # Use the dictionary keys for potential logging or debugging
+        # Use the dictionary keys for potential logger or debugging
         for dataset_name, dataset in input_datasets.items():
             if dataset.skip_write:
                 continue  # Skip datasets that are not meant to be published
@@ -114,36 +110,75 @@ class StandardETL(ABC):
         **kwargs,
     ) -> Dict[str, DeltaDataSet]:
         pass
-
+    
+    @log_metadata
     def run(self, spark: SparkSession, **kwargs):
         partition = kwargs.get("partition")
-        bronze_data_sets = self.get_bronze_datasets(spark, partition=partition)
+        pipeline_id = kwargs.get("pipeline_id")
+        run_id = kwargs.get("run_id")
+        
+        logger.info(
+            f"Starting run process for pipeline_id: {pipeline_id}, run_id:"
+            f" {run_id}, partition: {partition}"
+        )
+        
+        logger.info(
+            f"Starting get_bronze_dataset for pipeline_id: {pipeline_id},"
+            f" run_id: {run_id}, partition: {partition}"
+        )
+    
+        bronze_data_sets = self.get_bronze_datasets(
+            spark, 
+            partition=partition, 
+            run_id=run_id, 
+            pipeline_id=pipeline_id
+        )
         self.write_delta_data(bronze_data_sets, spark)
-        logging.info(
+        logger.info(
             "Created, validated & published bronze datasets:"
             f" {[ds for ds in bronze_data_sets.keys()]}"
         )
 
+        logger.info(
+            f"Starting get_silver_dataset for pipeline_id: {pipeline_id},"
+            f" run_id: {run_id}, partition: {partition}"
+        )
+
         silver_data_sets = self.get_silver_datasets(
-            bronze_data_sets, spark, partition=partition
+            bronze_data_sets,
+            spark,
+            partition=partition,
+            run_id=run_id,
+            pipeline_id=pipeline_id,
         )
         self.write_delta_data(silver_data_sets, spark)
-        logging.info(
+        logger.info(
             "Created, validated & published silver datasets:"
             f" {[ds for ds in silver_data_sets.keys()]}"
         )
 
-        gold_data_sets = self.get_gold_datasets(
-            silver_data_sets, spark, partition=partition
+        logger.info(
+            f"Starting get_gold_dataset for pipeline_id: {pipeline_id},"
+            f" run_id: {run_id}, partition: {partition}"
         )
+
+        gold_data_sets = self.get_gold_datasets(
+            silver_data_sets,
+            spark,
+            partition=partition,
+            run_id=run_id,
+            pipeline_id=pipeline_id,
+        )
+        
         self.write_delta_data(gold_data_sets, spark)
-        logging.info(
+        logger.info(
             "Created, validated & published gold datasets:"
             f" {[ds for ds in gold_data_sets.keys()]}"
         )
 
 
 class SalesMartETL(StandardETL):
+    @log_metadata
     def get_bronze_datasets(
         self, spark: SparkSession, **kwargs
     ) -> Dict[str, DeltaDataSet]:
@@ -172,7 +207,8 @@ class SalesMartETL(StandardETL):
                 replace_partition=True,
             ),
         }
-
+    
+    @log_metadata
     def get_dim_customer(
         self, customer: DeltaDataSet, spark: SparkSession, **kwargs
     ) -> DataFrame:
@@ -249,6 +285,7 @@ class SalesMartETL(StandardETL):
             .unionByName(customers_to_update)
         )
 
+    @log_metadata
     def get_fct_orders(
         self,
         input_datasets: Dict[str, DeltaDataSet],
@@ -273,6 +310,7 @@ class SalesMartETL(StandardETL):
             dim_customer_curr_df.customer_sur_id,
         )
 
+    @log_metadata
     def get_silver_datasets(
         self,
         input_datasets: Dict[str, DeltaDataSet],
@@ -316,6 +354,7 @@ class SalesMartETL(StandardETL):
         )
         return silver_datasets
 
+    @log_metadata
     def get_sales_mart(
         self, input_datasets: Dict[str, DeltaDataSet], **kwargs
     ) -> DataFrame:
@@ -345,6 +384,7 @@ class SalesMartETL(StandardETL):
 
         return aggregated_orders
 
+    @log_metadata
     def get_gold_datasets(
         self,
         input_datasets: Dict[str, DeltaDataSet],
@@ -372,9 +412,28 @@ if __name__ == "__main__":
     spark = (
         SparkSession.builder.appName("adventureworks").enableHiveSupport().getOrCreate()
     )
-    spark.sparkContext.setLogLevel("ERROR")
+    
+    # spark.sparkContext.setLogLevel("ERROR")
+    log4j_logger = spark._jvm.org.apache.log4j  # type: ignore
+    global logger
+    logger = log4j_logger.LogManager.getLogger("adventureworks_logger")
+    logger.info("Starting Sales Mart ETL")
+    
     sm = SalesMartETL()
-    partition = datetime.now().strftime("%Y-%m-%d-%H-%M")
-    # usually from orchestrator -%S
-    sm.run(spark, partition=partition)
+    
+    # Partition as input, usually from orchestrator
+    partition = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    )
+    pipeline_id = "sales_mart"
+    run_id = (
+        f"{pipeline_id}_"
+        f"{partition}_"
+        f"{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+    )
+
+    sm.run(spark, partition=partition, run_id=run_id, pipeline_id=pipeline_id)
     spark.stop
+

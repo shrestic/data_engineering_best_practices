@@ -2,8 +2,7 @@ import random
 import uuid
 from datetime import datetime
 from typing import List, Tuple
-
-from faker import Faker
+from faker import Faker # type: ignore
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import (IntegerType, StringType, StructField,
                                StructType, TimestampType)
