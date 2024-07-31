@@ -9,3 +9,6 @@ mypy==0.991
 flake8==6.0.0
 black==22.12.0
 isort==5.12.0
+cuallee==0.13.1
+PyQt5==5.15.11
+PyQtWebEngine==5.15.7

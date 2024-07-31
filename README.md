@@ -69,11 +69,8 @@ docker exec -ti local-spark bash -c '$SPARK_HOME/sbin/start-history-server.sh'
 
 * Run test
 ```
-docker exec -ti local-spark bash
+docker exec -ti local-spark bash -c 'export PYTHONPATH=/opt/spark/work-dir/adventureworks/pipelines && python3 -m pytest --log-cli-level info -p no:warnings -v ./adventureworks/tests'
 ```
 
-```
-pytest --log-cli-level info -p no:warnings -v ./adventureworks/tests
-```
 https://delta.io/blog/delta-lake-s3/
 https://docs.delta.io/latest/delta-batch.html#create-a-table&language-python

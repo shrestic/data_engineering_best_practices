@@ -1,6 +1,5 @@
 from adventureworks.pipelines.sales_mart import SalesMartETL
 
-
 class TestSalesMartETL:
     def test_get_bronze_datasets(self, spark) -> None:
         sm = SalesMartETL()
