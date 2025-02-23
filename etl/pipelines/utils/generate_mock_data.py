@@ -2,19 +2,22 @@ import random
 import uuid
 from datetime import datetime
 from typing import List, Tuple
-from faker import Faker # type: ignore
+from faker import Faker  # type: ignore
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.types import (IntegerType, StringType, StructField,
-                               StructType, TimestampType)
+from pyspark.sql.types import (
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
 ########################################################################
 # GENERATING FAKE BRONZE DATA !!!
 ########################################################################
 
 
-def _get_orders(
-    cust_ids: List[int], num_orders: int
-) -> List[Tuple[str, int, str, str, datetime, datetime]]:
+def _get_orders(cust_ids: List[int], num_orders: int) -> List[Tuple[str, int, str, str, datetime, datetime]]:
     items = [
         "chair",
         "car",
@@ -80,9 +83,7 @@ def generate_bronze_data(
                     StructField("item_id", StringType(), True),
                     StructField("item_name", StringType(), True),
                     StructField("delivered_on", TimestampType(), True),
-                    StructField(
-                        "datetime_order_placed", TimestampType(), True
-                    ),
+                    StructField("datetime_order_placed", TimestampType(), True),
                 ]
             ),
         ),

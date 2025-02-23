@@ -6,7 +6,7 @@ from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
     spark = (
-        SparkSession.builder.appName("{database}_ddl")
+        SparkSession.builder.appName("Create Tables")
         .config("spark.executor.cores", "1")
         .config("spark.executor.instances", "1")
         .enableHiveSupport()

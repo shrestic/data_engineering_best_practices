@@ -1,10 +1,9 @@
 from pyspark.sql import SparkSession
 
-
 def create_tables(
     spark,
-    path="s3a://adventureworks/delta",
-    database: str = "adventureworks",
+    path="s3a://ecommerce/delta",
+    database: str = "ecommerce",
 ):
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
 
@@ -24,14 +23,14 @@ def create_tables(
     )
 
 
-def drop_tables(spark, database: str = "adventureworks"):
+def drop_tables(spark, database: str = "ecommerce"):
     spark.sql(f"DROP TABLE IF EXISTS {database}.sales_mart")
     spark.sql(f"DROP DATABASE IF EXISTS {database}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     spark = (
-        SparkSession.builder.appName("adventureworks_ddl")
+        SparkSession.builder.appName("Create Gold Tables")
         .config("spark.executor.cores", "1")
         .config("spark.executor.instances", "1")
         .enableHiveSupport()

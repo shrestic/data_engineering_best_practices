@@ -1,12 +1,24 @@
 {
     "cSpell.words": [
-        "adventureworks",
+        "bi",
         "businessintelligence",
+        "createbuckets",
         "cust",
+        "deltaio",
+        "DRIVERNAME",
+        "ecommerce",
+        "initdb",
+        "leftanti",
         "Metadatadb",
         "mydatabase",
+        "myminio",
         "mypassword",
         "myuser",
-        "psycopg"
+        "psycopg",
+        "sdepassword",
+        "sdeuser",
+        "upserted",
+        "upserting",
+        "VARCHAR"
     ]
 }

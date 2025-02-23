@@ -3,60 +3,63 @@ from pyspark.sql import SparkSession
 
 def create_tables(
     spark,
-    path="s3a://adventureworks/delta",
-    database: str = "adventureworks",
+    path: str = "s3a://ecommerce/delta",
+    database: str = "ecommerce",
 ):
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
 
-    spark.sql(f"DROP TABLE IF EXISTS {database}.customer")
+    spark.sql(f"DROP TABLE IF EXISTS {database}.dim_customer")
     spark.sql(
         f"""
-              CREATE TABLE {database}.customer (
+              CREATE TABLE {database}.dim_customer (
                 id INT,
+                customer_sur_id STRING,
                 first_name STRING,
                 last_name STRING,
                 state_id STRING,
                 datetime_created TIMESTAMP,
                 datetime_updated TIMESTAMP,
-                etl_inserted TIMESTAMP,
+                current boolean,
+                valid_from TIMESTAMP,
+                valid_to TIMESTAMP,
                 partition STRING
                 ) USING DELTA
-                PARTITIONED BY (partition)
-                LOCATION '{path}/customer'
+                LOCATION '{path}/dim_customer'
               """
     )
 
-    spark.sql(f"DROP TABLE IF EXISTS {database}.orders")
+    spark.sql(f"DROP TABLE IF EXISTS {database}.fct_orders")
     spark.sql(
         f"""
-              CREATE TABLE {database}.orders (
+              CREATE TABLE {database}.fct_orders (
                 order_id STRING,
                 customer_id INT,
                 item_id STRING,
                 item_name STRING,
                 delivered_on TIMESTAMP,
                 datetime_order_placed TIMESTAMP,
+                customer_sur_id STRING,
                 etl_inserted TIMESTAMP,
                 partition STRING
                 ) USING DELTA
                 PARTITIONED BY (partition)
-                LOCATION '{path}/orders'
+                LOCATION '{path}/fct_orders'
               """
     )
 
 
 def drop_tables(
     spark,
-    database: str = "adventureworks",
+    database: str = "ecommerce",
 ):
-    spark.sql(f"DROP TABLE IF EXISTS {database}.customer")
-    spark.sql(f"DROP TABLE IF EXISTS {database}.orders")
+    spark.sql(f"DROP TABLE IF EXISTS {database}.dim_customer")
+    spark.sql(f"DROP TABLE IF EXISTS {database}.fct_orders")
     spark.sql(f"DROP DATABASE IF EXISTS {database}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     spark = (
-        SparkSession.builder.appName("{database}_ddl")
+        SparkSession.builder.appName("Create Silver Tables")
         .config("spark.executor.cores", "1")
         .config("spark.executor.instances", "1")
         .enableHiveSupport()

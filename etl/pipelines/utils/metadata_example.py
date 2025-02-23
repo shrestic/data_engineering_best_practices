@@ -1,5 +1,6 @@
 import inspect
 
+
 def log_metadata_example(func):
     """
     A decorator that logs the input parameters and return value of a function.
@@ -19,27 +20,29 @@ def log_metadata_example(func):
         """
         The inner wrapper function that performs the logging.
         """
-        # Capture all local variables (arguments and their values) 
+        # Capture all local variables (arguments and their values)
         # except for the last one, which is this function itself
-        input_params = dict(
-            zip(list(locals().keys())[:-1], list(locals().values())[:-1])
-        )
+        input_params = dict(zip(list(locals().keys())[:-1], list(locals().values())[:-1]))
 
+        print(f"input_params: {input_params}")
         # Print the keys (names of the local variables) for debugging
-        print(list(locals().keys())[:-1])  
-        
+        print(f"input_params.keys(): {list(locals().keys())[:-1]}")
+
         # Print the values (data stored in the local variables) for debugging
-        print(list(locals().values())[:-1]) 
+        print(f"input_params.values(): {list(locals().values())[:-1]}")
 
         # Get the names of the function's parameters, maintaining their order
         param_names = list(inspect.signature(func).parameters.keys())
 
+        print(f"param_names: {param_names}")
+
         # Create a dictionary to store input parameter names and values
         input_dict = {}
         for v in input_params.get("args"):
+            print(f"Element of list input_params.get(args) is: {v}")
             # Associate positional argument values with their names
             input_dict[param_names.pop(0)] = v
-        
+
         # Add keyword arguments to input_dict
         input_dict.update(kwargs)
 
@@ -57,10 +60,12 @@ def log_metadata_example(func):
 
     return log_wrapper
 
+
 # Example function to be decorated
 @log_metadata_example
 def example_function(a, b, c=1):
     return a + b + c
+
 
 # Example usage
 example_function(2, 3, c=4)

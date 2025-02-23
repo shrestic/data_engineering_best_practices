@@ -4,7 +4,7 @@ from pyspark.sql import SparkSession
 def create_tables(
     spark,
     database: str = "businessintelligence",
-    src_database: str = "adventureworks",
+    src_database: str = "ecommerce",
 ):
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {database}")
     spark.sql(
@@ -26,9 +26,9 @@ def drop_tables(spark, database: str = "businessintelligence"):
     spark.sql(f"DROP DATABASE IF EXISTS {database}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     spark = (
-        SparkSession.builder.appName("adventureworks_ddl")
+        SparkSession.builder.appName("Create BI Tables")
         .config("spark.executor.cores", "1")
         .config("spark.executor.instances", "1")
         .enableHiveSupport()
