@@ -185,7 +185,7 @@ class StandardETL(ABC):
                 )
 
     @abstractmethod
-    def get_bronze_datasets(
+    def make_bronze_datasets(
         self,
         spark: SparkSession,
         **kwargs,
@@ -193,7 +193,7 @@ class StandardETL(ABC):
         pass
 
     @abstractmethod
-    def get_silver_datasets(
+    def make_silver_datasets(
         self,
         input_datasets: Dict[str, DeltaDataset],
         spark: SparkSession,
@@ -202,7 +202,7 @@ class StandardETL(ABC):
         pass
 
     @abstractmethod
-    def get_gold_datasets(
+    def make_gold_datasets(
         self,
         input_datasets: Dict[str, DeltaDataset],
         spark: SparkSession,
@@ -224,7 +224,7 @@ class StandardETL(ABC):
 
         # Process Bronze Datasets
         logger.info(f"Starting get_bronze_datasets for {log_prefix}")
-        bronze_datasets = self.get_bronze_datasets(
+        bronze_datasets = self.make_bronze_datasets(
             spark,
             partition=partition,
             run_id=run_id,
@@ -235,7 +235,7 @@ class StandardETL(ABC):
 
         # Process Silver Datasets
         logger.info(f"Starting get_silver_datasets for {log_prefix}")
-        silver_datasets = self.get_silver_datasets(
+        silver_datasets = self.make_silver_datasets(
             bronze_datasets,
             spark,
             partition=partition,
@@ -247,7 +247,7 @@ class StandardETL(ABC):
 
         # Process Gold Datasets
         logger.info(f"Starting get_gold_datasets for {log_prefix}")
-        gold_datasets = self.get_gold_datasets(
+        gold_datasets = self.make_gold_datasets(
             silver_datasets,
             spark,
             partition=partition,
@@ -260,7 +260,7 @@ class StandardETL(ABC):
 
 class SalesMartETL(StandardETL):
     @log_metadata
-    def get_bronze_datasets(
+    def make_bronze_datasets(
         self,
         spark: SparkSession,
         **kwargs,
@@ -292,7 +292,7 @@ class SalesMartETL(StandardETL):
         }
 
     @log_metadata
-    def get_dim_customer(
+    def make_dim_customer(
         self,
         customer: DeltaDataset,
         spark: SparkSession,
@@ -368,7 +368,7 @@ class SalesMartETL(StandardETL):
         return dim_customer
 
     @log_metadata
-    def get_fct_orders(
+    def make_fct_orders(
         self,
         input_datasets: Dict[str, DeltaDataset],
         spark: SparkSession,
@@ -402,14 +402,14 @@ class SalesMartETL(StandardETL):
         return fct_orders
 
     @log_metadata
-    def get_silver_datasets(
+    def make_silver_datasets(
         self,
         input_datasets: Dict[str, DeltaDataset],
         spark: SparkSession,
         **kwargs,
     ) -> Dict[str, DeltaDataset]:
         self.check_required_inputs(input_datasets, ["customer", "orders"])
-        dim_customer_df = self.get_dim_customer(
+        dim_customer_df = self.make_dim_customer(
             input_datasets["customer"],
             spark,
             dim_customer=spark.read.table(f"{self.DATABASE}.dim_customer"),
@@ -432,7 +432,7 @@ class SalesMartETL(StandardETL):
 
         silver_datasets["fct_orders"] = DeltaDataset(
             name="fct_orders",
-            curr_data=self.get_fct_orders(input_datasets, spark),
+            curr_data=self.make_fct_orders(input_datasets, spark),
             primary_keys=["order_id"],
             storage_path=f"{self.STORAGE_PATH}/fct_orders",
             table_name="fct_orders",
@@ -444,7 +444,7 @@ class SalesMartETL(StandardETL):
         return silver_datasets
 
     @log_metadata
-    def get_sales_mart(
+    def make_sales_mart(
         self,
         input_datasets: Dict[str, DeltaDataset],
         **kwargs,
@@ -473,14 +473,14 @@ class SalesMartETL(StandardETL):
         return aggregated_orders
 
     @log_metadata
-    def get_gold_datasets(
+    def make_gold_datasets(
         self,
         input_datasets: Dict[str, DeltaDataset],
         spark: SparkSession,
         **kwargs,
     ) -> Dict[str, DeltaDataset]:
         self.check_required_inputs(input_datasets, ["dim_customer", "fct_orders"])
-        sales_mart_df = self.get_sales_mart(input_datasets)
+        sales_mart_df = self.make_sales_mart(input_datasets)
         return {
             "sales_mart": DeltaDataset(
                 name="sales_mart",
