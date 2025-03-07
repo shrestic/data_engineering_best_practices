@@ -1,0 +1,23 @@
+{
+  "expectations": [
+    {
+      "id": "374db5a7-ad18-4c02-a832-491439e0124f",
+      "kwargs": {
+        "column": "order_id"
+      },
+      "meta": {
+        "notes": {
+          "content": "order_id column is expected to be beunique",
+          "format": "markdown"
+        }
+      },
+      "type": "expect_column_values_to_be_unique"
+    }
+  ],
+  "id": "b19b7f69-e259-46ff-8f7e-c1c60bb29d95",
+  "meta": {
+    "great_expectations_version": "1.3.7"
+  },
+  "name": "orders_suite",
+  "notes": null
+}

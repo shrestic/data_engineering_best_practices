@@ -1,0 +1,12 @@
+{
+  "actions": [],
+  "id": "c354ffd6-91a3-4ba7-bfb3-5f7e3c63e1c3",
+  "name": "fct_orders_checkpoint",
+  "result_format": "COMPLETE",
+  "validation_definitions": [
+    {
+      "id": "3c82650b-fe4f-4b3d-bb9d-25226d89952a",
+      "name": "fct_orders_validation"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "actions": [],
+  "id": "d95700fa-42c6-4e9e-9af7-47c0287c2297",
+  "name": "sales_mart_checkpoint",
+  "result_format": "COMPLETE",
+  "validation_definitions": [
+    {
+      "id": "de7aea1c-ebd8-4b14-996c-c462024069b4",
+      "name": "sales_mart_validation"
+    }
+  ]
+}

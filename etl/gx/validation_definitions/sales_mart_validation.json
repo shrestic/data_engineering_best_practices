@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "23ab789b-d85a-49d7-b80d-39248435990a",
+      "name": "sales_mart"
+    },
+    "batch_definition": {
+      "id": "ce5c279d-c85d-4f2d-8770-6563c961b430",
+      "name": "sales_mart_batch"
+    },
+    "datasource": {
+      "id": "7d6dd2ba-49dd-44b4-96c7-0d70f3e88e72",
+      "name": "spark_datasource"
+    }
+  },
+  "id": "de7aea1c-ebd8-4b14-996c-c462024069b4",
+  "name": "sales_mart_validation",
+  "suite": {
+    "id": "f85bfd3c-94a8-48ba-8550-d22c12bd9607",
+    "name": "sales_mart_suite"
+  }
+}

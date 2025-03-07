@@ -1,0 +1,23 @@
+{
+  "expectations": [
+    {
+      "id": "cf42c6bc-85a1-4905-8d73-dabe16ad9d69",
+      "kwargs": {
+        "column": "order_id"
+      },
+      "meta": {
+        "notes": {
+          "content": "order_id column is expected to be beunique",
+          "format": "markdown"
+        }
+      },
+      "type": "expect_column_values_to_be_unique"
+    }
+  ],
+  "id": "3e9bc023-17af-4558-913d-84e9f8b2697f",
+  "meta": {
+    "great_expectations_version": "1.3.7"
+  },
+  "name": "fct_orders_suite",
+  "notes": null
+}

@@ -1,0 +1,23 @@
+{
+  "expectations": [
+    {
+      "id": "c689bb18-6a6e-49ca-afa8-3c1ac240c47b",
+      "kwargs": {
+        "column": "id"
+      },
+      "meta": {
+        "notes": {
+          "content": "id column is expected to be notbenull",
+          "format": "markdown"
+        }
+      },
+      "type": "expect_column_values_to_not_be_null"
+    }
+  ],
+  "id": "97bb273d-1224-4716-9d0a-f707fa8e666a",
+  "meta": {
+    "great_expectations_version": "1.3.7"
+  },
+  "name": "dim_customer_suite",
+  "notes": null
+}

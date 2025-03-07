@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "58b461ea-4b04-47d3-a391-76d47e70c5f3",
+      "name": "orders"
+    },
+    "batch_definition": {
+      "id": "459b1e23-e78b-44c3-baa7-19fcf02db0e9",
+      "name": "orders_batch"
+    },
+    "datasource": {
+      "id": "7d6dd2ba-49dd-44b4-96c7-0d70f3e88e72",
+      "name": "spark_datasource"
+    }
+  },
+  "id": "577f6044-e3cb-4dd1-be7a-247cffdb633c",
+  "name": "orders_validation",
+  "suite": {
+    "id": "b19b7f69-e259-46ff-8f7e-c1c60bb29d95",
+    "name": "orders_suite"
+  }
+}

@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-import sys
+import os
 from typing import Dict, List, Optional
-from delta.tables import DeltaTable
+from delta.tables import *  # noqa: F403
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 from utils.metadata import log_metadata
 from utils.generate_mock_data import generate_bronze_data
-from pyspark.sql.functions import expr, lit
+import great_expectations as gx
 
 
 @dataclass
@@ -39,6 +39,70 @@ class StandardETL(ABC):
         self.STORAGE_PATH = storage_path or "s3a://ecommerce/delta"
         self.DATABASE = database or "ecommerce"
         self.DEFAULT_PARTITION = partition or datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+    def run_data_validations(self, input_datasets: Dict[str, DeltaDataset]):
+        context = gx.get_context(
+            context_root_dir=os.path.join(os.getcwd(), "etl", "gx"),
+        )
+        results = []
+
+        for input_dataset in input_datasets.values():
+            definition_name = f"{input_dataset.name}_validation"
+            batch_parameters = {"dataframe": input_dataset.curr_data}
+
+            batch_definition = (
+                context.data_sources.get("spark_datasource")
+                .get_asset(input_dataset.name)
+                .get_batch_definition(f"{input_dataset.name}_batch")
+            )
+
+            expectation_suite = context.suites.get(name=f"{input_dataset.name}_suite")
+
+            validation_definition = gx.ValidationDefinition(
+                data=batch_definition,
+                suite=expectation_suite,
+                name=definition_name,
+            )
+
+            # Check if the validation definition exists
+            try:
+                context.validation_definitions.get(definition_name)
+            except gx.exceptions.DataContextError:
+                context.validation_definitions.add(validation_definition)
+
+            checkpoint_name = f"{input_dataset.name}_checkpoint"
+
+            # Check if checkpoint exists before adding
+            try:
+                checkpoint = context.checkpoints.get(checkpoint_name)
+            except gx.exceptions.DataContextError:
+                checkpoint = gx.Checkpoint(
+                    name=checkpoint_name,
+                    validation_definitions=[validation_definition],
+                    result_format="COMPLETE",
+                )
+                context.checkpoints.add(checkpoint)
+
+            # Run the checkpoint
+            checkpoint_result = checkpoint.run(batch_parameters=batch_parameters)
+
+            results.append(checkpoint_result)
+        return results
+
+    @log_metadata
+    def validate_data(self, input_datasets: Dict[str, DeltaDataset], **kwargs) -> bool:
+        validation_results = self.run_data_validations(input_datasets)
+        results = {}
+        for validation in validation_results:
+            suite_name = next(iter(validation.run_results.values()), {}).get("suite_name")
+            results[suite_name] = validation.success
+        for k, v in results.items():
+            if not v:
+                raise InValidDataException(
+                    f"The {k} dataset did not pass validation, please check the metadata db for more information"
+                )
+
+        return True
 
     def check_required_inputs(self, input_datasets: Dict[str, DeltaDataset], required_datasets: List[str]) -> None:
         """
@@ -172,7 +236,7 @@ class StandardETL(ABC):
                 ).save(dataset.storage_path)
             # Case 2: Upsert (Merge)
             else:
-                target_table = DeltaTable.forPath(spark, dataset.storage_path)
+                target_table = DeltaTable.forPath(spark, dataset.storage_path)  # noqa: F405
                 (
                     target_table.alias("target")
                     .merge(
@@ -230,6 +294,7 @@ class StandardETL(ABC):
             run_id=run_id,
             pipeline_id=pipeline_id,
         )
+        self.validate_data(bronze_datasets)
         self.write_delta_data(bronze_datasets, spark)
         logger.info(f"Created, validated & published bronze datasets: {list(bronze_datasets.keys())}")
 
@@ -242,6 +307,7 @@ class StandardETL(ABC):
             run_id=run_id,
             pipeline_id=pipeline_id,
         )
+        self.validate_data(silver_datasets)
         self.write_delta_data(silver_datasets, spark)
         logger.info(f"Created, validated & published silver datasets: {list(silver_datasets.keys())}")
 
@@ -254,6 +320,7 @@ class StandardETL(ABC):
             run_id=run_id,
             pipeline_id=pipeline_id,
         )
+        self.validate_data(gold_datasets)
         self.write_delta_data(gold_datasets, spark)
         logger.info(f"Created, validated & published gold datasets: {list(gold_datasets.keys())}")
 
